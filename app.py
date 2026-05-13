@@ -1,10 +1,15 @@
-import streamlit as st
+from fastapi import FastAPI
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 import os 
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
-st.title("Risk Reveal AI")
+app = FastAPI("Risk Reveal AI")
+templates = Jinja2Templates(directory="templates")
 
 st.subheader("Smart Phishing Detection Assistant")
 
