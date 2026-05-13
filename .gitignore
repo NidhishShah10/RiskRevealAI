@@ -2,5 +2,17 @@ venv/
 __pycache__/
 *.pyc
 .env
+
+# Model files
 models/*.pkl
+models/*.joblib
+
+# Jupyter
 .ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
