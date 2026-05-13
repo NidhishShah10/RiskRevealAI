@@ -1,4 +1,8 @@
 import streamlit as st
+import os 
+from dotenv import load_dotenv
+
+load_dotenv()
 
 st.title("Risk Reveal AI")
 
