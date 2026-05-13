@@ -1,0 +1,16 @@
+transformers
+torch
+scikit-learn
+lime
+shap
+beautifulsoup4
+dnspython
+python-whois
+tldextract
+python-Levenshtein
+requests
+openai
+flask
+pandas
+numpy
+jupyter
