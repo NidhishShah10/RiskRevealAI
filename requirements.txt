@@ -10,7 +10,10 @@ tldextract
 python-Levenshtein
 requests
 openai
-flask
+fastapi
+uvicorn
+python-multipart
+jinja2
 pandas
 numpy
 jupyter
