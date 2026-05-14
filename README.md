@@ -1,4 +1,4 @@
-# 🛡️ Risk Reveal AI - Smart Phishing Detection Assistant!
+## 🛡️ Risk Reveal AI - Smart Phishing Detection Assistant!
  
 ## 📌 Problem Statement
 
