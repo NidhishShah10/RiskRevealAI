@@ -1,8 +1,11 @@
+fastapi
+uvicorn
+python-multipart
+python-dotenv
 transformers
 torch
 scikit-learn
 lime
-shap
 beautifulsoup4
 dnspython
 python-whois
@@ -10,10 +13,7 @@ tldextract
 python-Levenshtein
 requests
 openai
-fastapi
-uvicorn
-python-multipart
-jinja2
 pandas
 numpy
 jupyter
+ipykernel

@@ -1,20 +1,16 @@
 from fastapi import FastAPI
-from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-import requests
-import os 
+from fastapi.responses import FileResponse
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
-app = FastAPI("Risk Reveal AI")
-templates = Jinja2Templates(directory="templates")
+app = FastAPI(title="Risk Reveal AI")
 
-st.subheader("Smart Phishing Detection Assistant")
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
-message = st.text_area("Paste Email or Message")
-
-if st.button("Analyze"):
-    st.write("Analyzing message...")
+# Serve index.html directly
+@app.get("/")
+async def home():
+    return FileResponse("templates/index.html")
