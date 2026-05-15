@@ -1,4 +1,8 @@
 import re
+import requests
+import os
+
+GOOGLE_SAFE_BROWSING_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
 
 SUSPICIOUS_EXTENSIONS = [".exe", ".zip", ".rar", ".bat", ".cmd", ".scr"]
 
@@ -38,25 +42,58 @@ def check_domain_structure(url):
     domain_match = re.findall(r'https?://([^/]+)', url)
     if domain_match:
         domain = domain_match[0]
-
-        # Check for multiple hyphens
         hyphen_count = domain.count('-')
         if hyphen_count >= 2:
             flags.append(f"Suspicious domain — {hyphen_count} hyphens detected")
             score += 25
-
-        # Check for excessive subdomains
         parts = domain.split('.')
         if len(parts) >= 4:
             flags.append("Excessive subdomains detected")
             score += 20
-
-        # Check for long domain name
         if len(domain) > 40:
             flags.append("Unusually long domain name")
             score += 15
-
     return flags, score
+
+def check_google_safe_browsing(urls):
+    api_key = os.getenv("GOOGLE_SAFE_BROWSING_KEY")
+    if not api_key:
+        return {}
+
+    payload = {
+        "client": {
+            "clientId": "risk-reveal-ai",
+            "clientVersion": "1.0.0"
+        },
+        "threatInfo": {
+            "threatTypes": [
+                "MALWARE",
+                "SOCIAL_ENGINEERING",
+                "UNWANTED_SOFTWARE",
+                "POTENTIALLY_HARMFUL_APPLICATION"
+            ],
+            "platformTypes": ["ANY_PLATFORM"],
+            "threatEntryTypes": ["URL"],
+            "threatEntries": [{"url": url} for url in urls]
+        }
+    }
+
+    try:
+        response = requests.post(
+            f"{GOOGLE_SAFE_BROWSING_URL}?key={api_key}",
+            json=payload,
+            timeout=5
+        )
+        data = response.json()
+        flagged = {}
+        if "matches" in data:
+            for match in data["matches"]:
+                flagged_url = match["threat"]["url"]
+                threat_type = match["threatType"]
+                flagged[flagged_url] = threat_type
+        return flagged
+    except:
+        return {}
 
 def analyze_links(message):
     urls = extract_urls(message)
@@ -69,12 +106,21 @@ def analyze_links(message):
             "link_flags": []
         }
 
+    # Check all URLs against Google Safe Browsing
+    google_flagged = check_google_safe_browsing(urls)
+
     results = []
     total_score = 0
 
     for url in urls:
         flags = []
         score = 0
+
+        # Google Safe Browsing check
+        if url in google_flagged:
+            threat = google_flagged[url]
+            flags.append(f"⚠️ Google Safe Browsing: {threat}")
+            score += 80
 
         if has_ip_address(url):
             flags.append("IP-based URL detected")
@@ -93,7 +139,6 @@ def analyze_links(message):
             flags.append(f"Suspicious keywords: {', '.join(keywords_found)}")
             score += len(keywords_found) * 20
 
-        # Check domain structure
         domain_flags, domain_score = check_domain_structure(url)
         flags.extend(domain_flags)
         score += domain_score
