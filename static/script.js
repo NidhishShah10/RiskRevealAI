@@ -13,8 +13,7 @@ async function analyzeEmail() {
     });
 
     const data = await response.json();
-
-    const color = data.risk_score >= 50 ? "#e74c3c" : "#2ecc71";
+    const color = data.risk_score >= 40 ? "#e74c3c" : "#2ecc71";
 
     const patternsList = data.detected_patterns.length > 0
         ? data.detected_patterns.map(p =>
@@ -24,9 +23,22 @@ async function analyzeEmail() {
 
     const linksList = data.urls_found.length > 0
         ? data.urls_found.map(u =>
-            `<li><strong>${u.url}</strong><ul>${u.flags.map(f => `<li>${f}</li>`).join("")}</ul></li>`
+            `<li><strong>${u.url}</strong>
+             <ul>${u.flags.map(f => `<li>${f}</li>`).join("")}</ul>
+             </li>`
           ).join("")
         : "<li>No URLs found</li>";
+
+    const senderSection = data.sender_domain
+        ? `<p style="margin-top: 16px;">
+               <strong>Sender Domain:</strong> ${data.sender_domain}
+           </p>
+           <ul style="padding-left: 20px;">
+               ${data.sender_flags.map(f => `<li>${f}</li>`).join("")}
+           </ul>`
+        : `<p style="margin-top: 16px;">
+               <strong>Sender:</strong> No sender domain found
+           </p>`;
 
     document.getElementById("result").innerHTML = `
         <hr style="margin: 20px 0;">
@@ -38,9 +50,13 @@ async function analyzeEmail() {
             ${patternsList}
         </ul>
 
-        <p style="margin-top: 16px;"><strong>URLs Detected (${data.url_count}):</strong></p>
+        <p style="margin-top: 16px;">
+            <strong>URLs Detected (${data.url_count}):</strong>
+        </p>
         <ul style="margin-top: 8px; padding-left: 20px;">
             ${linksList}
         </ul>
+
+        ${senderSection}
     `;
 }
