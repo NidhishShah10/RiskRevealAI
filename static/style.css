@@ -80,3 +80,21 @@ button:hover {
 #result {
     margin-top: 24px;
 }
+.result-box {
+    margin-top: 24px;
+    padding: 20px;
+    border-radius: 14px;
+    background-color: #ffffff;
+    border-left: 6px solid #4a90e2;
+}
+
+.detected-item {
+    background-color: #f5f7ff;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.detected-item strong {
+    color: #d90429;
+}
