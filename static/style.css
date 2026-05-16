@@ -98,3 +98,9 @@ button:hover {
 .detected-item strong {
     color: #d90429;
 }
+mark.highlight {
+    background-color: #ffe066;
+    color: #333;
+    border-radius: 3px;
+    padding: 1px 3px;
+}
