@@ -6,6 +6,10 @@ async function analyzeEmail() {
         return;
     }
 
+    document.getElementById("result").innerHTML = `
+        <p style="margin-top: 20px; color: #888;">Analyzing...</p>
+    `;
+
     const response = await fetch("/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,12 +44,37 @@ async function analyzeEmail() {
                <strong>Sender:</strong> No sender domain found
            </p>`;
 
-    document.getElementById("result").innerHTML = `
-        <hr style="margin: 20px 0;">
-        <h2 style="color: ${color}">Risk Score: ${data.risk_score}%</h2>
-        <h3 style="color: ${color}">Verdict: ${data.verdict}</h3>
+    // Fix newlines in highlighted message
+    const highlightedHtml = data.highlighted_message
+        .replace(/\n/g, "<br>");
 
-        <p><strong>Detected Threat Indicators:</strong></p>
+    const resultDiv = document.getElementById("result");
+
+    resultDiv.innerHTML = `
+        <hr style="margin: 20px 0;">
+
+        <h2 style="color: ${color}">
+            Risk Score: ${data.risk_score}%
+        </h2>
+        <h3 style="color: ${color}">
+            Verdict: ${data.verdict} — ${data.risk_level} Risk
+        </h3>
+
+        <div style="margin-top: 16px; padding: 14px; background: #f9f9f9; border-radius: 10px; border-left: 4px solid ${color};">
+            <strong>🤖 AI Explanation:</strong>
+            <p style="margin-top: 8px; line-height: 1.6;">${data.explanation}</p>
+        </div>
+
+        <div style="margin-top: 16px; padding: 14px; background: #f9f9f9; border-radius: 10px;">
+            <strong>📧 Highlighted Message:</strong>
+            <div style="margin-top: 8px; line-height: 1.8; font-family: monospace; font-size: 0.9rem;">
+                ${highlightedHtml}
+            </div>
+        </div>
+
+        <p style="margin-top: 16px;">
+            <strong>Detected Threat Indicators:</strong>
+        </p>
         <ul style="margin-top: 8px; padding-left: 20px;">
             ${patternsList}
         </ul>
@@ -58,5 +87,14 @@ async function analyzeEmail() {
         </ul>
 
         ${senderSection}
+
+        <p style="margin-top: 16px;">
+            <strong>Score Breakdown:</strong>
+        </p>
+        <ul style="padding-left: 20px;">
+            <li>Language: ${data.score_breakdown.language}%</li>
+            <li>Links: ${data.score_breakdown.links}%</li>
+            <li>Sender: ${data.score_breakdown.sender}%</li>
+        </ul>
     `;
 }
