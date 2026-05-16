@@ -4,17 +4,111 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/static/style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="/static/script.js" defer></script>
     <title>Risk Reveal AI</title>
   </head>
   <body>
-    <div class="container">
-      <h1>Risk Reveal AI 🛡️</h1>
-      <h3>Smart Phishing Detection Assistant</h3>
-      <p>Paste your email or message below to analyze it</p>
-      <textarea id="emailInput" rows="10" placeholder="Paste email or message here..."></textarea>
-      <button onclick="analyzeEmail()">Analyze</button>
-      <div id="result"></div>
+
+    <!-- Particles background -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- PAGE 1: INPUT -->
+    <div id="page-input" class="page active">
+      <div class="brand">
+        <span class="shield">🛡️</span>
+        <div>
+          <h1>Risk Reveal AI</h1>
+          <p class="tagline">Smart Phishing Detection Assistant</p>
+        </div>
+      </div>
+
+      <div class="input-card">
+        <label>Paste your email or message below</label>
+        <textarea id="emailInput" placeholder="Paste the full email content here including sender, subject, body and any links..."></textarea>
+        <div class="btn-wrap">
+          <button onclick="analyzeEmail()">Analyze Message</button>
+        </div>
+      </div>
+
+      <p class="disclaimer">Risk Reveal AI analyzes content locally. Your data is not stored.</p>
     </div>
+
+    <!-- PAGE 2: RESULTS -->
+    <div id="page-results" class="page">
+      <div class="results-header">
+        <button class="back-btn" onclick="goBack()">← Analyze Another</button>
+        <div class="brand-small">🛡️ Risk Reveal AI</div>
+      </div>
+      <div id="result" class="results-body"></div>
+    </div>
+
+    <script>
+    // Particles network background
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+
+    const particles = [];
+    const count = 80;
+
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            r: Math.random() * 2 + 1
+        });
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw connections
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 140) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(108, 99, 255, ${0.15 * (1 - dist / 140)})`;
+                    ctx.lineWidth = 0.8;
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.stroke();
+                }
+            }
+        }
+
+        // Draw dots
+        for (const p of particles) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(108, 99, 255, 0.5)';
+            ctx.fill();
+
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        }
+
+        requestAnimationFrame(draw);
+    }
+
+    draw();
+    </script>
+
   </body>
 </html>

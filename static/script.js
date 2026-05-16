@@ -17,84 +17,111 @@ async function analyzeEmail() {
     });
 
     const data = await response.json();
-    const color = data.risk_score >= 40 ? "#e74c3c" : "#2ecc71";
+    renderResults(data, message);
 
-    const patternsList = data.detected_patterns.length > 0
-        ? data.detected_patterns.map(p =>
-            `<li><strong>${p.category.toUpperCase()}:</strong> "${p.phrase}"</li>`
-          ).join("")
-        : "<li>None detected</li>";
+    document.getElementById("page-input").classList.remove("active");
+    document.getElementById("page-results").classList.add("active");
+    window.scrollTo(0, 0);
+}
 
-    const linksList = data.urls_found.length > 0
+function goBack() {
+    document.getElementById("page-results").classList.remove("active");
+    document.getElementById("page-input").classList.add("active");
+    document.getElementById("result").innerHTML = "";
+    window.scrollTo(0, 0);
+}
+
+function renderResults(data, message) {
+    const isPhishing = data.risk_score >= 40;
+    const scoreColor = data.risk_score >= 70 ? "#ff4d4d"
+                     : data.risk_score >= 40 ? "#ffb347"
+                     : "#00e5a0";
+
+    const patternChips = data.detected_patterns.length > 0
+        ? `<div class="chips">${data.detected_patterns.map(p =>
+            `<span class="chip chip-danger">${p.category.toUpperCase()}: "${p.phrase}"</span>`
+          ).join("")}</div>`
+        : `<span style="color:var(--text-muted); font-size:13px;">None detected</span>`;
+
+    const urlBlocks = data.urls_found.length > 0
         ? data.urls_found.map(u =>
-            `<li><strong>${u.url}</strong>
-             <ul>${u.flags.map(f => `<li>${f}</li>`).join("")}</ul>
-             </li>`
+            `<div class="url-block">
+                <div class="url-text">🔗 ${u.url}</div>
+                <div class="chips">${u.flags.map(f =>
+                    `<span class="chip chip-warn">${f}</span>`
+                ).join("")}</div>
+            </div>`
           ).join("")
-        : "<li>No URLs found</li>";
+        : `<span style="color:var(--text-muted); font-size:13px;">No URLs found</span>`;
 
-    const senderSection = data.sender_domain
-        ? `<p style="margin-top: 16px;">
-               <strong>Sender Domain:</strong> ${data.sender_domain}
-           </p>
-           <ul style="padding-left: 20px;">
-               ${data.sender_flags.map(f => `<li>${f}</li>`).join("")}
-           </ul>`
-        : `<p style="margin-top: 16px;">
-               <strong>Sender:</strong> No sender domain found
-           </p>`;
+    const senderChips = data.sender_domain
+        ? `<div class="sender-domain">${data.sender_domain}</div>
+           <div class="chips">${data.sender_flags.map(f =>
+               `<span class="chip chip-danger">${f}</span>`
+           ).join("")}</div>`
+        : `<span style="color:var(--text-muted); font-size:13px;">No sender domain found</span>`;
 
-    // Fix newlines in highlighted message
     const highlightedHtml = data.highlighted_message
-        .replace(/\n/g, "<br>");
+        ? data.highlighted_message.replace(/\n/g, "<br>")
+        : message.replace(/\n/g, "<br>");
 
-    const resultDiv = document.getElementById("result");
-
-    resultDiv.innerHTML = `
-        <hr style="margin: 20px 0;">
-
-        <h2 style="color: ${color}">
-            Risk Score: ${data.risk_score}%
-        </h2>
-        <h3 style="color: ${color}">
-            Verdict: ${data.verdict} — ${data.risk_level} Risk
-        </h3>
-
-        <div style="margin-top: 16px; padding: 14px; background: #f9f9f9; border-radius: 10px; border-left: 4px solid ${color};">
-            <strong>🤖 AI Explanation:</strong>
-            <p style="margin-top: 8px; line-height: 1.6;">${data.explanation}</p>
+    document.getElementById("result").innerHTML = `
+        <div class="score-hero" style="color: ${scoreColor};">
+            <div class="score-number" style="color: ${scoreColor};">${data.risk_score}%</div>
+            <div class="score-verdict" style="color: ${scoreColor};">
+                ${isPhishing ? "🚨" : "✅"} ${data.verdict}
+            </div>
+            <div class="score-level">${data.risk_level} Risk</div>
         </div>
 
-        <div style="margin-top: 16px; padding: 14px; background: #f9f9f9; border-radius: 10px;">
-            <strong>📧 Highlighted Message:</strong>
-            <div style="margin-top: 8px; line-height: 1.8; font-family: monospace; font-size: 0.9rem;">
-                ${highlightedHtml}
+        <div class="card">
+            <div class="card-title">🤖 AI Explanation</div>
+            <div class="explanation-text">${data.explanation}</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">⚠️ Detected Threat Indicators</div>
+            ${patternChips}
+        </div>
+
+        <div class="card">
+            <div class="card-title">🔗 URLs Detected (${data.url_count})</div>
+            ${urlBlocks}
+        </div>
+
+        <div class="card">
+            <div class="card-title">👤 Sender Analysis</div>
+            ${senderChips}
+        </div>
+
+        <div class="card">
+            <div class="card-title">📧 Highlighted Message</div>
+            <div class="highlighted-msg">${highlightedHtml}</div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📊 Score Breakdown</div>
+            <div class="bar-row">
+                <span class="bar-label">Language</span>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:${data.score_breakdown.language}%"></div>
+                </div>
+                <span class="bar-val">${data.score_breakdown.language}%</span>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Links</span>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:${data.score_breakdown.links}%"></div>
+                </div>
+                <span class="bar-val">${data.score_breakdown.links}%</span>
+            </div>
+            <div class="bar-row">
+                <span class="bar-label">Sender</span>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:${data.score_breakdown.sender}%"></div>
+                </div>
+                <span class="bar-val">${data.score_breakdown.sender}%</span>
             </div>
         </div>
-
-        <p style="margin-top: 16px;">
-            <strong>Detected Threat Indicators:</strong>
-        </p>
-        <ul style="margin-top: 8px; padding-left: 20px;">
-            ${patternsList}
-        </ul>
-
-        <p style="margin-top: 16px;">
-            <strong>URLs Detected (${data.url_count}):</strong>
-        </p>
-        <ul style="margin-top: 8px; padding-left: 20px;">
-            ${linksList}
-        </ul>
-
-        ${senderSection}
-
-        <p style="margin-top: 16px;">
-            <strong>Score Breakdown:</strong>
-        </p>
-        <ul style="padding-left: 20px;">
-            <li>Language: ${data.score_breakdown.language}%</li>
-            <li>Links: ${data.score_breakdown.links}%</li>
-            <li>Sender: ${data.score_breakdown.sender}%</li>
-        </ul>
     `;
 }
