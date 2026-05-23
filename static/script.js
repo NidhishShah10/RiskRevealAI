@@ -5,13 +5,18 @@ window.addEventListener("load", () => {
 
     setTimeout(() => {
 
+        // Show main page instantly
+        inputPage.classList.add("active");
+
+        // Fade intro out on top
         intro.classList.add("hidden");
 
+        // Remove intro after animation finishes
         setTimeout(() => {
-            inputPage.classList.add("active");
+            intro.style.display = "none";
         }, 500);
 
-    }, 2200);
+    }, 1800);
 
 });
 
