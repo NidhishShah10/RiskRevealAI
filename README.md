@@ -32,3 +32,97 @@ Risk Reveal AI is an intelligent phishing assistant that scans the contents of e
 - Terence Pierson
 - Anton Shemshur
 ---
+
+## ⭐ Features
+
+- Real-time phishing detection
+- AI-generated explanations
+- Sender authenticity verification
+- URL reputation analysis
+- Suspicious phrase highlighting
+- Interactive UI
+- Explainable AI outputs
+---
+## ⚙️ Setup & Installation
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/NidhishShah10/risk-reveal-ai.git
+cd risk-reveal-ai
+```
+
+## 2. Create & Activate Virtual Environment
+
+## Windows
+
+```bash
+python -m venv venv
+venv\Scripts\activate
+```
+
+## macOS / Linux
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+## 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+## 4. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+GOOGLE_SAFE_BROWSING_API_KEY=your_google_api_key
+```
+
+## 5. Run the Application
+
+```bash
+uvicorn main:app --reload
+```
+
+
+## 6. Open in Browser
+
+```txt
+http://127.0.0.1:8000
+```
+
+---
+
+## 🛠️ Tech Stack
+
+## Frontend
+
+- HTML5
+- CSS3
+- JavaScript
+- Canvas API Animations
+
+## Backend
+
+- Python
+- FastAPI
+- Uvicorn
+
+## AI & Machine Learning
+
+- HuggingFace Transformers
+- BERT-based phishing classifier
+- Scikit-learn
+- LIME
+- SHAP
+
+## APIs
+
+- Groq API / LLM API
+- Google Safe Browsing API
+- ---
