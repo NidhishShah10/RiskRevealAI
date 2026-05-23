@@ -1,154 +1,326 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/static/style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <script src="/static/script.js" defer></script>
+
     <title>Risk Reveal AI</title>
-  </head>
-  <body>
 
+    <link rel="stylesheet" href="/static/style.css" />
+
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <script src="/static/script.js" defer></script>
+</head>
+
+<body>
+
+    <!-- PARTICLES -->
     <canvas id="particles-canvas"></canvas>
-    <!-- INTRO SCREEN -->
-<div id="intro-screen">
-  <div class="intro-content">
-    <div class="intro-logo">🛡️</div>
-    <h1 class="intro-title">Risk Reveal AI</h1>
-    <p class="intro-subtitle">
-      Smart Phishing Detection Assistant
-    </p>
-  </div>
-</div>
 
-    <!-- Robot Loading Overlay -->
+    <!-- =========================
+         INTRO SCREEN
+    ========================== -->
+
+    <div id="intro-screen">
+
+        <div class="intro-content">
+
+            <div class="intro-logo">
+                🛡️
+            </div>
+
+            <h1 class="intro-title">
+                Risk Reveal AI
+            </h1>
+
+            <p class="intro-subtitle">
+                Smart Phishing Detection Assistant
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- =========================
+         LOADING OVERLAY
+    ========================== -->
+
     <div id="loading-overlay">
-      <div class="loading-content">
-        <p class="loading-text">Analyzing your message...</p>
-        <div class="loading-track">
-          <div id="loading-bar"></div>
+
+        <div class="loading-content">
+
+            <p class="loading-text">
+                Analyzing your message...
+            </p>
+
+            <div class="loading-track">
+                <div id="loading-bar"></div>
+            </div>
+
+            <div id="robot-wrap">
+                <div id="robot">🤖</div>
+            </div>
+
         </div>
-        <div id="robot-wrap">
-          <div id="robot">🤖</div>
-        </div>
-      </div>
+
     </div>
 
-    <!-- PAGE 1: INPUT -->
-    <div id="page-input" class="page active">
-      <div class="brand">
-        <span class="shield">🛡️</span>
-        <div>
-          <h1>Risk Reveal AI</h1>
-          <p class="tagline">Smart Phishing Detection Assistant</p>
-        </div>
-      </div>
+    <!-- =========================
+         PAGE 1
+    ========================== -->
 
-      <div class="input-card">
-        <label>Paste your email or message below</label>
-        <textarea id="emailInput" placeholder="Paste the full email content here including sender, subject, body and any links..."></textarea>
-        <div class="btn-wrap">
-          <button class="analyze-btn" onclick="analyzeEmail()">Analyze Message</button>
-        </div>
-        <button class="clear-btn" onclick="clearInput()" title="Clear all">🗑️</button>
-      </div>
+    <div id="page-input" class="page">
 
-      <p class="disclaimer">Risk Reveal AI analyzes content locally. Your data is not stored.</p>
+        <div class="brand">
+
+            <span class="shield">🛡️</span>
+
+            <div>
+                <h1>Risk Reveal AI</h1>
+
+                <p class="tagline">
+                    Smart Phishing Detection Assistant
+                </p>
+            </div>
+
+        </div>
+
+        <div class="input-card">
+
+            <label>
+                Paste your email or message below
+            </label>
+
+            <textarea
+                id="emailInput"
+                placeholder="Paste the full email content here including sender, subject, body and any links..."
+            ></textarea>
+
+            <div class="btn-wrap">
+
+                <button
+                    class="analyze-btn"
+                    onclick="analyzeEmail()"
+                >
+                    Analyze Message
+                </button>
+
+            </div>
+
+            <button
+                class="clear-btn"
+                onclick="clearInput()"
+                title="Clear all"
+            >
+                🗑️
+            </button>
+
+        </div>
+
+        <p class="disclaimer">
+            Risk Reveal AI analyzes content locally.
+            Your data is not stored.
+        </p>
+
     </div>
 
-    <!-- PAGE 2: RESULTS -->
+    <!-- =========================
+         PAGE 2
+    ========================== -->
+
     <div id="page-results" class="page">
-      <div class="results-header">
-        <button class="back-btn" onclick="goBack()">← Analyze Another</button>
-        <div class="brand-small">🛡️ Risk Reveal AI</div>
-      </div>
-      <div id="result" class="results-body"></div>
+
+        <div class="results-header">
+
+            <button
+                class="back-btn"
+                onclick="goBack()"
+            >
+                ← Analyze Another
+            </button>
+
+            <div class="brand-small">
+                🛡️ Risk Reveal AI
+            </div>
+
+        </div>
+
+        <div
+            id="result"
+            class="results-body"
+        ></div>
+
     </div>
+
+    <!-- =========================
+         PARTICLE SCRIPT
+    ========================== -->
 
     <script>
-    const canvas = document.getElementById('particles-canvas');
-    const ctx = canvas.getContext('2d');
-    let mouse = { x: null, y: null };
+
+    const canvas =
+        document.getElementById('particles-canvas');
+
+    const ctx =
+        canvas.getContext('2d');
+
+    let mouse = {
+        x: null,
+        y: null
+    };
 
     function resize() {
+
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
     }
+
     resize();
+
     window.addEventListener('resize', resize);
 
     window.addEventListener('mousemove', e => {
+
         mouse.x = e.clientX;
         mouse.y = e.clientY;
+
     });
 
     window.addEventListener('mouseleave', () => {
+
         mouse.x = null;
         mouse.y = null;
+
     });
 
     const count = 120;
-    const particles = Array.from({ length: count }, () => ({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.35,
-        vy: (Math.random() - 0.5) * 0.35,
-        r: Math.random() * 2.5 + 1.5
-    }));
+
+    const particles =
+        Array.from({ length: count }, () => ({
+
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+
+            vx: (Math.random() - 0.5) * 0.35,
+            vy: (Math.random() - 0.5) * 0.35,
+
+            r: Math.random() * 2.5 + 1.5
+
+        }));
 
     function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.clearRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
 
         for (const p of particles) {
+
             if (mouse.x !== null) {
+
                 const dx = p.x - mouse.x;
                 const dy = p.y - mouse.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                const dist =
+                    Math.sqrt(dx * dx + dy * dy);
+
                 const repelRadius = 120;
+
                 if (dist < repelRadius) {
-                    const force = (repelRadius - dist) / repelRadius;
-                    p.vx += (dx / dist) * force * 0.6;
-                    p.vy += (dy / dist) * force * 0.6;
+
+                    const force =
+                        (repelRadius - dist) / repelRadius;
+
+                    p.vx +=
+                        (dx / dist) * force * 0.6;
+
+                    p.vy +=
+                        (dy / dist) * force * 0.6;
                 }
             }
 
-            const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+            const speed =
+                Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+
             if (speed > 2.5) {
+
                 p.vx = (p.vx / speed) * 2.5;
                 p.vy = (p.vy / speed) * 2.5;
             }
 
             p.vx *= 0.98;
             p.vy *= 0.98;
+
             p.x += p.vx;
             p.y += p.vy;
 
-            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+            if (p.x < 0 || p.x > canvas.width)
+                p.vx *= -1;
+
+            if (p.y < 0 || p.y > canvas.height)
+                p.vy *= -1;
         }
 
         for (let i = 0; i < particles.length; i++) {
+
             for (let j = i + 1; j < particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                const dx =
+                    particles[i].x - particles[j].x;
+
+                const dy =
+                    particles[i].y - particles[j].y;
+
+                const dist =
+                    Math.sqrt(dx * dx + dy * dy);
+
                 const maxDist = 200;
+
                 if (dist < maxDist) {
+
                     ctx.beginPath();
-                    ctx.strokeStyle = `rgba(108, 99, 255, ${0.25 * (1 - dist / maxDist)})`;
+
+                    ctx.strokeStyle =
+                        `rgba(108, 99, 255, ${
+                            0.25 * (1 - dist / maxDist)
+                        })`;
+
                     ctx.lineWidth = 1;
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
+
+                    ctx.moveTo(
+                        particles[i].x,
+                        particles[i].y
+                    );
+
+                    ctx.lineTo(
+                        particles[j].x,
+                        particles[j].y
+                    );
+
                     ctx.stroke();
                 }
             }
         }
 
         for (const p of particles) {
+
             ctx.beginPath();
-            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(108, 99, 255, 0.6)';
+
+            ctx.arc(
+                p.x,
+                p.y,
+                p.r,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fillStyle =
+                'rgba(108, 99, 255, 0.6)';
+
             ctx.fill();
         }
 
@@ -156,7 +328,8 @@
     }
 
     draw();
+
     </script>
 
-  </body>
+</body>
 </html>
