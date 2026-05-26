@@ -167,6 +167,42 @@ async def analyze_email(data: EmailRequest):
     language_result = detect_suspicious_language(
         message
     )
+    safe_keywords = [
+
+        "order confirmation",
+        "invoice",
+        "receipt",
+        "shopify",
+        "google workspace",
+        "microsoft 365",
+        "slack",
+        "zoom",
+        "calendar",
+        "meeting",
+        "your account",
+        "notification",
+        "admin/orders",
+        "admin/settings"
+    ]
+
+    message_lower = message.lower()
+
+    safe_hits = sum(
+        1 for word in safe_keywords
+        if word in message_lower
+    )
+    if safe_hits >= 2:
+
+        language_result["risk_score"] = max(
+
+            0,
+
+            int(
+                language_result["risk_score"] * 0.45
+            )
+        )
+        
+        print(f"SAFE KEYWORDS: {safe_hits} hits, language score reduced to {language_result['risk_score']}")
 
     link_result = analyze_links(
         message
@@ -175,6 +211,20 @@ async def analyze_email(data: EmailRequest):
     sender_result = check_sender(
         message
     )
+
+    all_links_safe = all(
+        len(url["flags"]) == 0
+        for url in link_result["urls_found"]
+    )
+
+    if (
+        all_links_safe
+        and link_result["url_count"] > 0
+    ):
+        language_result["risk_score"] = int(
+            language_result["risk_score"] * 0.55
+        )
+        print(f"CALIBRATION: Language score reduced to {language_result['risk_score']} (all links safe)")
 
     suspicious_urls = sum(
 

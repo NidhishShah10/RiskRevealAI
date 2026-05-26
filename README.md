@@ -32,3 +32,78 @@ Risk Reveal AI is an intelligent phishing assistant that scans the contents of e
 - Terence Pierson
 - Anton Shemshur
 ---
+
+# 🧠 Technologies Used
+
+## Backend
+- Python
+- FastAPI
+- Uvicorn
+
+## Frontend
+- HTML
+- CSS
+- JavaScript
+
+## Machine Learning
+- Hugging Face Transformers
+- DistilBERT
+- PyTorch
+- Scikit-learn
+
+## Security & Analysis
+- DNSPython
+- TLDExtract
+- Python-Levenshtein
+
+## Data Processing
+- Pandas
+- NumPy
+
+## Explainable AI
+- Groq API (Explanation generation only)
+
+---
+
+# 📊 Data Training
+
+The phishing classifier was fine-tuned using DistilBERT on multiple phishing and spam datasets including:
+
+- CEAS 2008
+- Enron Spam Dataset
+- SpamAssassin
+- Nazario Phishing Corpus
+- Nigerian Fraud Dataset
+- Phishing Email Dataset
+- Ling Spam Dataset
+
+## Training Pipeline
+
+1. Dataset cleaning and preprocessing
+2. Label balancing
+3. Tokenization using DistilBERT tokenizer
+4. Fine-tuning for binary classification
+5. Evaluation using:
+   - Accuracy
+   - Precision
+   - Recall
+   - F1-score
+6. Saving the trained model for deployment
+
+---
+
+# 📚 References
+
+1. Alotaibi, F., et al. (2024). *Explainable artificial intelligence in web phishing classification on secure IoT with cloud-based cyber-physical systems*. Cluster Computing.
+
+2. Alhogail, A., & Alsabih, A. (2023). *Explainable AI for IoT devices and robotic communication phishing detection: A machine learning approach using LIME and SHAP*. Applied Sciences.
+
+3. Basit, A., et al. (2023). *An intelligent phishing email detection system using ensemble methods and explainable AI*. Future Generation Computer Systems.
+
+4. Korkmaz, M., et al. (2023). *Mitigating cyber threats: Machine learning and explainable AI for phishing detection*. Computers and Security.
+
+5. Salloum, S., et al. (2024). *Smart and transparent defense: A hybrid explainable AI framework for phishing resilience*. IEEE Access.
+
+6. Sanh, V., Debut, L., Chaumond, J., & Wolf, T. (2019). *DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter*. arXiv preprint arXiv:1910.01108.
+
+---

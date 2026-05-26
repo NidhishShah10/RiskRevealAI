@@ -1,85 +1,93 @@
 import re
+from urllib.parse import urlparse
 
-SHORT_URL_DOMAINS = [
-    "bit.ly",
-    "tinyurl.com",
-    "t.co",
-    "goo.gl",
-    "ow.ly"
+
+TRUSTED_DOMAINS = [
+
+    "paypal.com",
+    "amazon.com",
+    "apple.com",
+    "google.com",
+    "microsoft.com",
+    "venmo.com",
+    "shopify.com",
+    "stripe.com",
+    "netflix.com",
+    "linkedin.com",
+    "dropbox.com",
+    "facebook.com",
+    "instagram.com",
+    "spotify.com",
+    "bankofamerica.com",
+    "chase.com",
+    "wellsfargo.com"
 ]
 
+
+SUSPICIOUS_KEYWORDS = [
+
+    "verify",
+    "confirm",
+    "secure",
+    "login",
+    "password",
+    "wallet",
+    "bank",
+    "billing",
+    "payment",
+    "refund",
+    "claim",
+    "suspended",
+    "limited",
+    "urgent",
+    "update"
+]
+
+
 SUSPICIOUS_TLDS = [
+
     ".xyz",
     ".top",
     ".click",
     ".gq",
-    ".tk"
-]
-
-HIGH_RISK_KEYWORDS = [
-    "login",
-    "verify",
-    "confirm",
-    "secure",
-    "update",
-    "payment",
-    "billing",
-    "password",
-    "account",
-    "banking"
-]
-
-NORMAL_RISK_KEYWORDS = [
-    "hold",
-    "delivery",
-    "fee",
-    "refund",
-    "claim",
-    "transaction"
+    ".tk",
+    ".ru"
 ]
 
 
-def extract_urls(message):
+def is_trusted_domain(domain):
 
-    pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+    for trusted in TRUSTED_DOMAINS:
 
-    return re.findall(pattern, message)
+        if domain == trusted:
+            return True
+
+        if domain.endswith("." + trusted):
+            return True
+
+    return False
 
 
-def is_shortened_url(url):
+def extract_urls(text):
 
-    return any(
-        domain in url
-        for domain in SHORT_URL_DOMAINS
+    return re.findall(
+        r'https?://[^\s]+',
+        text
     )
 
 
-def has_ip_address(url):
+def analyze_links(text):
 
-    return bool(
-        re.match(
-            r'https?://(\d{1,3}\.){3}\d{1,3}',
-            url
-        )
-    )
+    urls = extract_urls(text)
 
+    url_results = []
 
-def analyze_links(message):
-
-    urls = extract_urls(message)
-
-    if not urls:
-
-        return {
-            "urls_found": [],
-            "url_count": 0,
-            "link_score": 0,
-            "link_flags": []
-        }
-
-    results = []
+    link_flags = []
 
     total_score = 0
+
+    suspicious_count = 0
+
 
     for url in urls:
 
@@ -87,78 +95,21 @@ def analyze_links(message):
 
         score = 0
 
-        domain_match = re.findall(
-            r'https?://([^/]+)',
-            url
-        )
+        parsed = urlparse(url)
 
-        domain = domain_match[0] if domain_match else ""
+        domain = parsed.netloc.lower()
 
-
-        if is_shortened_url(url):
-
-            flags.append(
-                "Shortened URL detected"
-            )
-
-            score += 25
+        trusted = is_trusted_domain(domain)
 
 
-        if has_ip_address(url):
+        if not url.startswith("https://"):
 
             flags.append(
-                "IP-based URL detected"
+                "Non-HTTPS link"
             )
 
-            score += 35
+            score += 20
 
-        high_hits = []
-
-        for keyword in HIGH_RISK_KEYWORDS:
-
-            if keyword in url.lower():
-
-                high_hits.append(keyword)
-
-        if high_hits:
-
-            flags.append(
-                f"High-risk keywords: {', '.join(high_hits)}"
-            )
-
-            score += len(high_hits) * 20
-
-
-        normal_hits = []
-
-        for keyword in NORMAL_RISK_KEYWORDS:
-
-            if keyword in url.lower():
-
-                normal_hits.append(keyword)
-
-        if normal_hits:
-
-            flags.append(
-                f"Suspicious keywords: {', '.join(normal_hits)}"
-            )
-
-            score += len(normal_hits) * 10
-
-
-        hyphen_count = domain.count("-")
-
-        if hyphen_count >= 1:
-
-            flags.append(
-                f"Suspicious domain structure ({hyphen_count} hyphen)"
-            )
-
-            score += 15
-
-        # =====================================
-        # SUSPICIOUS TLD
-        # =====================================
 
         for tld in SUSPICIOUS_TLDS:
 
@@ -168,94 +119,89 @@ def analyze_links(message):
                     f"Suspicious top-level domain '{tld}'"
                 )
 
-                score += 35
+                score += 30
 
 
-        if domain.count(".") >= 3:
+        hyphen_count = domain.count("-")
+
+        if hyphen_count >= 1 and not trusted:
 
             flags.append(
-                "Excessive subdomains detected"
+                f"Suspicious domain structure ({hyphen_count} hyphen)"
             )
 
             score += 20
 
 
-        if len(domain) > 35:
+        if not trusted:
+
+            for keyword in SUSPICIOUS_KEYWORDS:
+
+                if keyword in url.lower():
+
+                    flags.append(
+                        f"High-risk keyword: {keyword}"
+                    )
+
+                    score += 10
+
+
+        if domain.count(".") >= 3 and not trusted:
 
             flags.append(
-                "Unusually long domain"
+                "Excessive subdomains detected"
             )
 
             score += 15
 
 
-        final_url_score = min(score, 100)
+        is_suspicious = score >= 30
 
-        results.append({
+        if is_suspicious:
+            suspicious_count += 1
 
-            "url":
-                url,
+        total_score += score
 
-            "flags":
-                flags,
+        url_results.append({
 
-            "url_score":
-                final_url_score
+            "url": url,
+
+            "flags": flags,
+
+            "is_suspicious": is_suspicious
         })
 
-        total_score += final_url_score
+        link_flags.extend(flags)
 
 
-    suspicious_urls = sum(
+    if len(urls) == 0:
 
-        1 for r in results
+        final_link_score = 0
 
-        if len(r["flags"]) > 0
-    )
+    else:
 
-    if suspicious_urls >= 2:
-        total_score += 15
+        avg_score = total_score / len(urls)
 
-    if suspicious_urls >= 3:
-        total_score += 20
+        final_link_score = min(
+            int(avg_score),
+            100
+        )
 
-
-    all_links_suspicious = all(
-
-        len(r["flags"]) > 0
-
-        for r in results
-    )
-
-    final_link_score = min(
-        total_score,
-        100
-    )
 
     if (
-        len(results) >= 2
+        len(urls) >= 2
         and
-        all_links_suspicious
+        suspicious_count == len(urls)
     ):
         final_link_score = 100
 
     return {
 
-        "urls_found":
-            results,
+        "urls_found": url_results,
 
-        "url_count":
-            len(urls),
+        "url_count": len(urls),
 
-        "link_score":
-            final_link_score,
+        "link_flags": link_flags,
 
-        "link_flags": [
-
-            flag
-
-            for r in results
-
-            for flag in r["flags"]
-        ]
+        "link_score": final_link_score
     }

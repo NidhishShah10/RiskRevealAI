@@ -84,22 +84,35 @@ def check_spf_record(domain):
 
 def check_brand_spoofing(domain):
 
+    domain_name = domain.split('.')[0].lower()
+
     for brand in KNOWN_BRANDS:
 
-        brand_name = brand.split('.')[0]
-
-        domain_name = domain.split('.')[0]
+        brand_name = brand.split('.')[0].lower()
 
         if (
             brand_name in domain_name
             and domain != brand
+            and domain_name != brand_name
         ):
             return brand
 
+        dist = distance(
+            domain_name,
+            brand_name
+        )
+
+        similarity_ratio = (
+            dist / max(
+                len(domain_name),
+                len(brand_name)
+            )
+        )
 
         if (
-            distance(domain_name, brand_name) <= 2
-            and domain != brand
+            dist <= 1
+            and similarity_ratio < 0.20
+            and domain_name != brand_name
         ):
             return brand
 
@@ -132,12 +145,14 @@ def check_sender(email_text):
     )
 
     if spoofed:
+        
+        if domain != spoofed:
 
-        flags.append(
-            f"Possible spoofing of trusted brand '{spoofed}'"
-        )
+            flags.append(
+                f"Possible spoofing of trusted brand '{spoofed}'"
+            )
 
-        score += 45
+            score += 45
 
 
     spf = check_spf_record(domain)
