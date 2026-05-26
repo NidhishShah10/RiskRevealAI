@@ -92,6 +92,23 @@ The phishing classifier was fine-tuned using DistilBERT on multiple phishing and
 
 ---
 
+## 📁 Model Files
+
+The trained DistilBERT model files are not included in this repository due to GitHub file size limits.
+
+To run the project locally:
+
+1. Train the model using the datasets
+2. Save the trained model inside:
+
+app/models/phishing_model/
+
+3. Ensure the folder contains:
+- config.json
+- tokenizer files
+- model.safetensors
+---
+
 # 📚 References
 
 1. Alotaibi, F., et al. (2024). *Explainable artificial intelligence in web phishing classification on secure IoT with cloud-based cyber-physical systems*. Cluster Computing.

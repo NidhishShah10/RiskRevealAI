@@ -1,14 +1,23 @@
 venv/
 __pycache__/
 *.pyc
+
 .env
+
 models/*.pkl
 models/*.joblib
+
 .ipynb_checkpoints/
+
 .vscode/
+
 .DS_Store
-Thumbs.db   
+Thumbs.db
+
+# datasets
 data/
-app/models/phishing_model/
 *.csv
+
+# trained transformers models
+app/models/phishing_model/
 *.safetensors
