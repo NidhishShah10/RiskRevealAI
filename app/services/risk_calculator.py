@@ -39,4 +39,4 @@ def calculate_risk(language_score, link_score, sender_score):
             "links": link_score,
             "sender": sender_score
         }
-    }
+    }   

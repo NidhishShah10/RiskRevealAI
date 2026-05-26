@@ -1,104 +1,75 @@
 import re
-import requests
-import os
-
-GOOGLE_SAFE_BROWSING_URL = "https://safebrowsing.googleapis.com/v4/threatMatches:find"
-
-SUSPICIOUS_EXTENSIONS = [".exe", ".zip", ".rar", ".bat", ".cmd", ".scr"]
-
-SUSPICIOUS_KEYWORDS = [
-    "login", "verify", "secure", "account", "update",
-    "confirm", "banking", "signin", "password", "free",
-    "reactivate", "suspend", "hold", "billing", "payment",
-    "recover", "restore", "validate", "authenticate", "access",
-    "click", "redirect", "token", "session", "credential"
-]
 
 SHORT_URL_DOMAINS = [
-    "bit.ly", "tinyurl.com", "t.co", "goo.gl",
-    "ow.ly", "rb.gy", "shorturl.at"
+    "bit.ly",
+    "tinyurl.com",
+    "t.co",
+    "goo.gl",
+    "ow.ly"
 ]
 
+SUSPICIOUS_TLDS = [
+    ".xyz",
+    ".top",
+    ".click",
+    ".gq",
+    ".tk"
+]
+
+HIGH_RISK_KEYWORDS = [
+    "login",
+    "verify",
+    "confirm",
+    "secure",
+    "update",
+    "payment",
+    "billing",
+    "password",
+    "account",
+    "banking"
+]
+
+NORMAL_RISK_KEYWORDS = [
+    "hold",
+    "delivery",
+    "fee",
+    "refund",
+    "claim",
+    "transaction"
+]
+
+
 def extract_urls(message):
+
     pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+
     return re.findall(pattern, message)
 
+
 def is_shortened_url(url):
-    return any(domain in url for domain in SHORT_URL_DOMAINS)
 
-def has_suspicious_extension(url):
-    return any(url.endswith(ext) for ext in SUSPICIOUS_EXTENSIONS)
+    return any(
+        domain in url
+        for domain in SHORT_URL_DOMAINS
+    )
 
-def has_suspicious_keywords(url):
-    url_lower = url.lower()
-    return [kw for kw in SUSPICIOUS_KEYWORDS if kw in url_lower]
 
 def has_ip_address(url):
-    return bool(re.match(r'https?://(\d{1,3}\.){3}\d{1,3}', url))
 
-def check_domain_structure(url):
-    flags = []
-    score = 0
-    domain_match = re.findall(r'https?://([^/]+)', url)
-    if domain_match:
-        domain = domain_match[0]
-        hyphen_count = domain.count('-')
-        if hyphen_count >= 2:
-            flags.append(f"Suspicious domain — {hyphen_count} hyphens detected")
-            score += 25
-        parts = domain.split('.')
-        if len(parts) >= 4:
-            flags.append("Excessive subdomains detected")
-            score += 20
-        if len(domain) > 40:
-            flags.append("Unusually long domain name")
-            score += 15
-    return flags, score
-
-def check_google_safe_browsing(urls):
-    api_key = os.getenv("GOOGLE_SAFE_BROWSING_KEY")
-    if not api_key:
-        return {}
-
-    payload = {
-        "client": {
-            "clientId": "risk-reveal-ai",
-            "clientVersion": "1.0.0"
-        },
-        "threatInfo": {
-            "threatTypes": [
-                "MALWARE",
-                "SOCIAL_ENGINEERING",
-                "UNWANTED_SOFTWARE",
-                "POTENTIALLY_HARMFUL_APPLICATION"
-            ],
-            "platformTypes": ["ANY_PLATFORM"],
-            "threatEntryTypes": ["URL"],
-            "threatEntries": [{"url": url} for url in urls]
-        }
-    }
-
-    try:
-        response = requests.post(
-            f"{GOOGLE_SAFE_BROWSING_URL}?key={api_key}",
-            json=payload,
-            timeout=5
+    return bool(
+        re.match(
+            r'https?://(\d{1,3}\.){3}\d{1,3}',
+            url
         )
-        data = response.json()
-        flagged = {}
-        if "matches" in data:
-            for match in data["matches"]:
-                flagged_url = match["threat"]["url"]
-                threat_type = match["threatType"]
-                flagged[flagged_url] = threat_type
-        return flagged
-    except:
-        return {}
+    )
+
 
 def analyze_links(message):
+
     urls = extract_urls(message)
 
     if not urls:
+
         return {
             "urls_found": [],
             "url_count": 0,
@@ -106,54 +77,185 @@ def analyze_links(message):
             "link_flags": []
         }
 
-    # Check all URLs against Google Safe Browsing
-    google_flagged = check_google_safe_browsing(urls)
-
     results = []
+
     total_score = 0
 
     for url in urls:
+
         flags = []
+
         score = 0
 
-        # Google Safe Browsing check
-        if url in google_flagged:
-            threat = google_flagged[url]
-            flags.append(f"⚠️ Google Safe Browsing: {threat}")
-            score += 80
+        domain_match = re.findall(
+            r'https?://([^/]+)',
+            url
+        )
 
-        if has_ip_address(url):
-            flags.append("IP-based URL detected")
-            score += 30
+        domain = domain_match[0] if domain_match else ""
+
 
         if is_shortened_url(url):
-            flags.append("Shortened URL detected")
-            score += 20
 
-        if has_suspicious_extension(url):
-            flags.append("Suspicious file extension")
+            flags.append(
+                "Shortened URL detected"
+            )
+
             score += 25
 
-        keywords_found = has_suspicious_keywords(url)
-        if keywords_found:
-            flags.append(f"Suspicious keywords: {', '.join(keywords_found)}")
-            score += len(keywords_found) * 20
 
-        domain_flags, domain_score = check_domain_structure(url)
-        flags.extend(domain_flags)
-        score += domain_score
+        if has_ip_address(url):
+
+            flags.append(
+                "IP-based URL detected"
+            )
+
+            score += 35
+
+        high_hits = []
+
+        for keyword in HIGH_RISK_KEYWORDS:
+
+            if keyword in url.lower():
+
+                high_hits.append(keyword)
+
+        if high_hits:
+
+            flags.append(
+                f"High-risk keywords: {', '.join(high_hits)}"
+            )
+
+            score += len(high_hits) * 20
+
+
+        normal_hits = []
+
+        for keyword in NORMAL_RISK_KEYWORDS:
+
+            if keyword in url.lower():
+
+                normal_hits.append(keyword)
+
+        if normal_hits:
+
+            flags.append(
+                f"Suspicious keywords: {', '.join(normal_hits)}"
+            )
+
+            score += len(normal_hits) * 10
+
+
+        hyphen_count = domain.count("-")
+
+        if hyphen_count >= 1:
+
+            flags.append(
+                f"Suspicious domain structure ({hyphen_count} hyphen)"
+            )
+
+            score += 15
+
+        # =====================================
+        # SUSPICIOUS TLD
+        # =====================================
+
+        for tld in SUSPICIOUS_TLDS:
+
+            if domain.endswith(tld):
+
+                flags.append(
+                    f"Suspicious top-level domain '{tld}'"
+                )
+
+                score += 35
+
+
+        if domain.count(".") >= 3:
+
+            flags.append(
+                "Excessive subdomains detected"
+            )
+
+            score += 20
+
+
+        if len(domain) > 35:
+
+            flags.append(
+                "Unusually long domain"
+            )
+
+            score += 15
+
+
+        final_url_score = min(score, 100)
 
         results.append({
-            "url": url,
-            "flags": flags,
-            "url_score": min(score, 100)
+
+            "url":
+                url,
+
+            "flags":
+                flags,
+
+            "url_score":
+                final_url_score
         })
 
-        total_score += score
+        total_score += final_url_score
+
+
+    suspicious_urls = sum(
+
+        1 for r in results
+
+        if len(r["flags"]) > 0
+    )
+
+    if suspicious_urls >= 2:
+        total_score += 15
+
+    if suspicious_urls >= 3:
+        total_score += 20
+
+
+    all_links_suspicious = all(
+
+        len(r["flags"]) > 0
+
+        for r in results
+    )
+
+    final_link_score = min(
+        total_score,
+        100
+    )
+
+    if (
+        len(results) >= 2
+        and
+        all_links_suspicious
+    ):
+        final_link_score = 100
 
     return {
-        "urls_found": results,
-        "url_count": len(urls),
-        "link_score": min(total_score, 100),
-        "link_flags": [flag for r in results for flag in r["flags"]]
+
+        "urls_found":
+            results,
+
+        "url_count":
+            len(urls),
+
+        "link_score":
+            final_link_score,
+
+        "link_flags": [
+
+            flag
+
+            for r in results
+
+            for flag in r["flags"]
+        ]
     }

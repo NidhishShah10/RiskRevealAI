@@ -33,9 +33,6 @@ class EmailRequest(BaseModel):
     message: str
 
 
-# =========================================
-# AI EXPLANATION GENERATOR
-# =========================================
 
 def generate_explanation(
     risk_result,
@@ -160,18 +157,12 @@ Start with:
         )
 
 
-# =========================================
-# MAIN ANALYSIS ROUTE
-# =========================================
 
 @app.post("/analyze")
 async def analyze_email(data: EmailRequest):
 
     message = data.message.strip()
 
-    # =====================================
-    # RUN ALL DETECTION MODULES
-    # =====================================
 
     language_result = detect_suspicious_language(
         message
@@ -184,11 +175,6 @@ async def analyze_email(data: EmailRequest):
     sender_result = check_sender(
         message
     )
-
-    # =====================================
-    # FORCE 100% LINKS SCORE
-    # IF ALL LINKS ARE SUSPICIOUS
-    # =====================================
 
     suspicious_urls = sum(
 
@@ -206,10 +192,6 @@ async def analyze_email(data: EmailRequest):
 
         link_result["link_score"] = 100
 
-    # =====================================
-    # FORCE 100% SENDER SCORE
-    # FOR MAJOR SPOOFING
-    # =====================================
 
     if (
         "Possible spoofing" in
@@ -220,9 +202,6 @@ async def analyze_email(data: EmailRequest):
 
         sender_result["sender_score"] = 100
 
-    # =====================================
-    # BASE RISK CALCULATION
-    # =====================================
 
     risk_result = calculate_risk(
 
@@ -233,13 +212,9 @@ async def analyze_email(data: EmailRequest):
         sender_result["sender_score"]
     )
 
-    # =====================================
-    # SMART PHISHING BOOST LOGIC
-    # =====================================
 
     boost_score = 0
 
-    # Sender spoofing + malicious links
     if (
         sender_result["sender_score"] >= 40
         and
@@ -247,7 +222,6 @@ async def analyze_email(data: EmailRequest):
     ):
         boost_score += 8
 
-    # Suspicious language + sender issues
     if (
         sender_result["sender_score"] >= 30
         and
@@ -255,17 +229,12 @@ async def analyze_email(data: EmailRequest):
     ):
         boost_score += 5
 
-    # Multiple suspicious URLs
     if suspicious_urls >= 2:
         boost_score += 4
 
     if suspicious_urls >= 3:
         boost_score += 6
 
-    # =====================================
-    # AUTO FORCE 100%
-    # IF ALL 3 CATEGORIES VERY HIGH
-    # =====================================
 
     if (
         language_result["risk_score"] >= 60
@@ -285,9 +254,6 @@ async def analyze_email(data: EmailRequest):
             + boost_score
         )
 
-    # =====================================
-    # SCORE BREAKDOWN UPDATE
-    # =====================================
 
     risk_result["score_breakdown"] = {
 
@@ -301,9 +267,6 @@ async def analyze_email(data: EmailRequest):
             sender_result["sender_score"]
     }
 
-    # =====================================
-    # FINAL VERDICT LOGIC
-    # =====================================
 
     final_score = risk_result["final_score"]
 
@@ -331,9 +294,6 @@ async def analyze_email(data: EmailRequest):
             "Likely Legitimate"
         )
 
-    # =====================================
-    # HIGHLIGHT SUSPICIOUS TEXT
-    # =====================================
 
     highlighted = highlight_suspicious(
 
@@ -344,9 +304,6 @@ async def analyze_email(data: EmailRequest):
         ]
     )
 
-    # =====================================
-    # GENERATE AI EXPLANATION
-    # =====================================
 
     explanation = generate_explanation(
 
@@ -364,36 +321,6 @@ async def analyze_email(data: EmailRequest):
             "flags"
         ]
     )
-
-    # =====================================
-    # DEBUG LOGGING
-    # =====================================
-
-    print("\nNEW RISK CALCULATOR RUNNING")
-
-    print(
-        f"LANGUAGE SCORE: "
-        f"{language_result['risk_score']}"
-    )
-
-    print(
-        f"LINK SCORE: "
-        f"{link_result['link_score']}"
-    )
-
-    print(
-        f"SENDER SCORE: "
-        f"{sender_result['sender_score']}"
-    )
-
-    print(
-        f"FINAL SCORE: "
-        f"{risk_result['final_score']}"
-    )
-
-    # =====================================
-    # RETURN RESPONSE
-    # =====================================
 
     return {
 
