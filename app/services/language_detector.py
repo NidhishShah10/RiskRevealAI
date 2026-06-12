@@ -238,8 +238,6 @@ def detect_suspicious_language(text):
 
         phishing_prob = probs[0][1].item()
 
-
-    # Adjusted confidence zones
     if phishing_prob < 0.60:
 
         score = int(phishing_prob * 20)
@@ -369,7 +367,6 @@ def detect_suspicious_language(text):
 
     score = min(score, 100)
 
-    # Fixed: Added 'category' field back for generate_explanation
     detected_patterns = []
 
     for phrase in HIGH_RISK_PHRASES:

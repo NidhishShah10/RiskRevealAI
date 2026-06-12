@@ -140,8 +140,6 @@ def analyze_links(text):
 
             score += 20
 
-
-        # Only treat keywords as risky on unknown domains, and check path only
         if not trusted:
 
             for keyword in SUSPICIOUS_KEYWORDS:
@@ -163,8 +161,6 @@ def analyze_links(text):
 
             score += 15
 
-
-        # Changed from score >= 30 to score >= 15 for better sensitivity
         is_suspicious = score >= 15
 
         if is_suspicious:
@@ -197,12 +193,10 @@ def analyze_links(text):
             100
         )
 
-
-    # FIXED: Changed from len(urls) * 100 to len(urls)
     if (
         len(urls) >= 2
         and
-        suspicious_count == len(urls)  # All URLs are suspicious
+        suspicious_count == len(urls) 
     ):
         final_link_score = 100
 
