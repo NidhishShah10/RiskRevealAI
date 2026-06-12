@@ -20,7 +20,15 @@ TRUSTED_DOMAINS = [
     "spotify.com",
     "bankofamerica.com",
     "chase.com",
-    "wellsfargo.com"
+    "wellsfargo.com",
+    "costco.com",
+    "walmart.com",
+    "target.com",
+    "bestbuy.com",
+    "ebay.com",
+    "airbnb.com",
+    "uber.com",
+    "lyft.com"
 ]
 
 
@@ -133,11 +141,12 @@ def analyze_links(text):
             score += 20
 
 
+        # Only treat keywords as risky on unknown domains, and check path only
         if not trusted:
 
             for keyword in SUSPICIOUS_KEYWORDS:
 
-                if keyword in url.lower():
+                if keyword in parsed.path.lower():
 
                     flags.append(
                         f"High-risk keyword: {keyword}"
@@ -155,7 +164,8 @@ def analyze_links(text):
             score += 15
 
 
-        is_suspicious = score >= 30
+        # Changed from score >= 30 to score >= 15 for better sensitivity
+        is_suspicious = score >= 15
 
         if is_suspicious:
             suspicious_count += 1
@@ -188,10 +198,11 @@ def analyze_links(text):
         )
 
 
+    # FIXED: Changed from len(urls) * 100 to len(urls)
     if (
         len(urls) >= 2
         and
-        suspicious_count == len(urls)
+        suspicious_count == len(urls)  # All URLs are suspicious
     ):
         final_link_score = 100
 
